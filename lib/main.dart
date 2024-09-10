@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 class Player {
+  // Player attributes
   int health;
   int maxHealth;
   int attack;
@@ -58,8 +59,9 @@ class Enemy {
   int health;
   int attack;
   String attackMessage;
+  String imageAsset; // Image path
 
-  Enemy(this.name, this.health, this.attack, this.attackMessage);
+  Enemy(this.name, this.health, this.attack, this.attackMessage, this.imageAsset);
 
   int attackPlayer() {
     return attack + Random().nextInt(5); // Slight random bonus for enemies
@@ -74,11 +76,11 @@ class Enemy {
   }
 }
 
-// Helper to create enemies with variable stats within a range
-Enemy createEnemy(String name, int minHP, int maxHP, int minAttack, int maxAttack, String attackMessage) {
+// Helper to create enemies with variable stats and images
+Enemy createEnemy(String name, int minHP, int maxHP, int minAttack, int maxAttack, String attackMessage, String imageAsset) {
   int health = minHP + Random().nextInt(maxHP - minHP + 1);
   int attack = minAttack + Random().nextInt(maxAttack - minAttack + 1);
-  return Enemy(name, health, attack, attackMessage);
+  return Enemy(name, health, attack, attackMessage, imageAsset);
 }
 
 void main() {
@@ -109,31 +111,31 @@ class _CyberpunkStreetScreenState extends State<CyberpunkStreetScreen> {
   String combatLog = "";
   bool inCombat = false;
 
-  // Create enemies with variable HP and attack ranges
+  // Create enemies with variable HP, attack ranges, and images
   List<Enemy> alleyEnemies = [
-    createEnemy("Cyber-Bum", 40, 60, 5, 8, "The Cyber-Bum hacks your nose"),
-    createEnemy("Neon Junkie", 35, 50, 4, 6, "The Neon Junkie injects chaos into your mind"),
-    createEnemy("Chrome Enforcer", 50, 70, 6, 9, "The Chrome Enforcer crushes you with his steel fists"),
-    createEnemy("Street Hacker", 40, 55, 5, 7, "The Street Hacker overloads your neural circuits"),
-    createEnemy("Rogue Cyberspider", 45, 60, 6, 8, "The Cyberspider bites into your cyberware"),
+    createEnemy("Cyber-Bum", 40, 60, 5, 8, "The Cyber-Bum hacks your nose", "assets/images/cyber_bum.png"),
+    createEnemy("Neon Junkie", 35, 50, 4, 6, "The Neon Junkie injects chaos into your mind", "assets/images/neon_junkie.png"),
+    createEnemy("Chrome Enforcer", 50, 70, 6, 9, "The Chrome Enforcer crushes you with his steel fists", "assets/images/chrome_enforcer.png"),
+    createEnemy("Street Hacker", 40, 55, 5, 7, "The Street Hacker overloads your neural circuits", "assets/images/street_hacker.png"),
+    createEnemy("Rogue Cyberspider", 45, 60, 6, 8, "The Cyberspider bites into your cyberware", "assets/images/rogue_cyberspider.png"),
   ];
 
   List<Enemy> roboTenementsEnemies = [
-    createEnemy("Scrap-Bot", 70, 90, 9, 12, "Scrap-Bot throws rusty gears at you"),
-    createEnemy("Unemployed Butler Bot", 80, 100, 8, 10, "The Butler Bot throws a silver tray at your face"),
-    createEnemy("Defective Welding Drone", 75, 95, 10, 13, "The Welding Drone sprays molten metal in your direction"),
+    createEnemy("Scrap-Bot", 70, 90, 9, 12, "Scrap-Bot throws rusty gears at you", "assets/images/scrap_bot.png"),
+    createEnemy("Unemployed Butler Bot", 80, 100, 8, 10, "The Butler Bot throws a silver tray at your face", "assets/images/butler_bot.png"),
+    createEnemy("Defective Welding Drone", 75, 95, 10, 13, "The Welding Drone sprays molten metal in your direction", "assets/images/welding_drone.png"),
   ];
 
   Enemy getFreshEnemy(List<Enemy> enemyList) {
     // Create a new fresh instance of an enemy
     Enemy baseEnemy = enemyList[Random().nextInt(enemyList.length)];
-    return createEnemy(baseEnemy.name, baseEnemy.health, baseEnemy.health + 10, baseEnemy.attack, baseEnemy.attack + 3, baseEnemy.attackMessage);
+    return createEnemy(baseEnemy.name, baseEnemy.health, baseEnemy.health + 10, baseEnemy.attack, baseEnemy.attack + 3, baseEnemy.attackMessage, baseEnemy.imageAsset);
   }
 
   void enterAlley() {
     if (!inCombat) {
       setState(() {
-        currentEnemy = getFreshEnemy(alleyEnemies); // Always create a new enemy instance
+        currentEnemy = getFreshEnemy(alleyEnemies);
         combatLog = "A ${currentEnemy!.name} appears from the shadows!";
         inCombat = true;
       });
@@ -143,14 +145,13 @@ class _CyberpunkStreetScreenState extends State<CyberpunkStreetScreen> {
   void enterRoboTenements() {
     if (!inCombat && player.level >= 3) {
       setState(() {
-        currentEnemy = getFreshEnemy(roboTenementsEnemies); // Always create a new enemy instance
+        currentEnemy = getFreshEnemy(roboTenementsEnemies);
         combatLog = "You enter the Robo-Tenements and encounter a ${currentEnemy!.name}!";
         inCombat = true;
       });
     }
   }
 
-  // Flee from combat (50% chance)
   void fleeCombat() {
     if (inCombat) {
       setState(() {
@@ -219,58 +220,147 @@ class _CyberpunkStreetScreenState extends State<CyberpunkStreetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var screenWidth = MediaQuery.of(context).size.width;
+    var screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Cyberpunk Street at Night"),
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Text(
-              "You are standing in a neon-lit street. The city buzzes around you.",
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: inCombat ? null : enterAlley,
-              child: const Text("Enter Alley"),
-            ),
-            if (player.level >= 3)
-              ElevatedButton(
-                onPressed: inCombat ? null : enterRoboTenements,
-                child: const Text("Enter Robo-Tenements (Level 3+)"),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (inCombat && currentEnemy != null)
+                Column(
+                  children: [
+                    Container(
+                      width: screenWidth * 0.37, // Half the size of previous
+                      height: screenHeight * 0.22,
+                      child: Image.asset(currentEnemy!.imageAsset, fit: BoxFit.contain),
+                    ),
+                    Text(
+                      "Enemy: ${currentEnemy!.name}",
+                      textAlign: TextAlign.center,
+                    ),
+                    Text(
+                      "Enemy Health: ${currentEnemy!.health}",
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              if (!inCombat)
+                Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Alley Option
+                        Stack(
+                          children: [
+                            Container(
+                              width: screenWidth * 0.5, // Half size
+                              height: screenHeight * 0.3,
+                              child: Image.asset("assets/images/cyberpunk_street.png", fit: BoxFit.contain),
+                            ),
+                            Positioned.fill(
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: ElevatedButton(
+                                  onPressed: inCombat ? null : enterAlley,
+                                  child: const Text("Enter Alley"),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 10),
+                        // Robo-Tenements Option
+                        if (player.level >= 3)
+                          Stack(
+                            children: [
+                              Container(
+                                width: screenWidth * 0.6, // Half size
+                                height: screenHeight * 0.4,
+                                child: Image.asset("assets/images/robo_tenements.png", fit: BoxFit.contain),
+                              ),
+                              Positioned.fill(
+                                child: Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: ElevatedButton(
+                                    onPressed: inCombat ? null : enterRoboTenements,
+                                    child: const Text("Enter Robo-Tenements"),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    // Digi-Clinic Option
+                    Stack(
+                      children: [
+                        Container(
+                          width: screenWidth * 0.5, // Half size
+                          height: screenHeight * 0.3,
+                          child: Image.asset("assets/images/digi_clinic.png", fit: BoxFit.contain),
+                        ),
+                        Positioned.fill(
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: ElevatedButton(
+                              onPressed: inCombat ? null : healAtClinic,
+                              child: const Text("Heal at digi-Clinic"),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              const SizedBox(height: 20),
+              Text(
+                "Player Health: ${player.health}/${player.maxHealth}",
+                textAlign: TextAlign.center,
               ),
-            ElevatedButton(
-              onPressed: inCombat ? null : healAtClinic,
-              child: const Text("Heal at digi-Clinic (20 credits)"),
-            ),
-            const SizedBox(height: 20),
-            Text("Player Health: ${player.health}/${player.maxHealth}"),
-            Text("Player Currency: ${player.currency} credits"),
-            Text("Player Level: ${player.level}"),
-            Text("XP: ${player.currentXP}/${player.xpToNextLevel}"),
-            const SizedBox(height: 20),
-            currentEnemy != null && inCombat
-                ? Column(
-                    children: [
-                      Text("Enemy: ${currentEnemy!.name}"),
-                      Text("Enemy Health: ${currentEnemy!.health}"),
-                      ElevatedButton(
-                        onPressed: attackEnemy,
-                        child: const Text("Attack Enemy"),
-                      ),
-                      ElevatedButton(
-                        onPressed: fleeCombat,
-                        child: const Text("Flee"),
-                      ),
-                    ],
-                  )
-                : Container(),
-            const SizedBox(height: 20),
-            Text(combatLog),
-          ],
+              Text(
+                "Player Currency: ${player.currency} credits",
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                "Player Level: ${player.level}",
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                "XP: ${player.currentXP}/${player.xpToNextLevel}",
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              if (currentEnemy != null && inCombat)
+                Column(
+                  children: [
+                    ElevatedButton(
+                      onPressed: attackEnemy,
+                      child: const Text("Attack Enemy"),
+                    ),
+                    ElevatedButton(
+                      onPressed: fleeCombat,
+                      child: const Text("Flee"),
+                    ),
+                  ],
+                ),
+              const SizedBox(height: 20),
+              Text(
+                combatLog,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
